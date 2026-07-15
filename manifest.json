@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "hlhub \u2014 Hale syntax highlighting for GitHub",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Tree-sitter based syntax highlighting for the Hale language (.hl) on github.com",
   "background": {
     "service_worker": "background.js"

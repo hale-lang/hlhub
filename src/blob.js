@@ -51,9 +51,15 @@ export function createBlobHighlighter(requestSpans, opts = {}) {
   function patch() {
     if (!lineSpans) return;
     const stats = { total: 0, patched: 0, alreadyDone: 0, noSpans: 0, textMismatch: 0 };
-    for (const el of root.querySelectorAll('div.react-file-line[data-line-number]')) {
+    // Line numbers: both code-view variants give lines id="LC<n>". The
+    // virtualized variant also has data-line-number; the logged-in
+    // no-virtualization variant does not, so the id is the primary key.
+    for (const el of root.querySelectorAll('div.react-file-line')) {
       stats.total++;
-      const n = Number(el.getAttribute('data-line-number'));
+      const n = /^LC\d+$/.test(el.id)
+        ? Number(el.id.slice(2))
+        : Number(el.getAttribute('data-line-number'));
+      if (!Number.isInteger(n) || n < 1) continue;
       const spans = lineSpans.get(n);
       if (!spans) { stats.noSpans++; continue; }
       // Recycled/re-rendered divs: our mark survives but content moved on.
