@@ -1,0 +1,31 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+      - name: Package per-browser zips
+        run: |
+          (cd dist && zip -qr "../hlhub-chrome-${GITHUB_REF_NAME}.zip" .)
+          (cd dist-firefox && zip -qr "../hlhub-firefox-${GITHUB_REF_NAME}.zip" .)
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            "hlhub-chrome-${GITHUB_REF_NAME}.zip" \
+            "hlhub-firefox-${GITHUB_REF_NAME}.zip" \
+            --title "$GITHUB_REF_NAME" --generate-notes

@@ -88,11 +88,18 @@ cp ~/code/hale-lang/pond/heron/queries/highlights.scm vendor/hale-highlights.scm
 npm run build
 ```
 
-## Load the extension
+## Install
 
-- **Chrome**: `chrome://extensions` → Developer mode → *Load unpacked* → pick `dist/`.
+No toolchain needed: grab the zip for your browser from the
+[latest release](https://github.com/hale-lang/hlhub/releases/latest) and unzip it.
+
+- **Chrome**: `chrome://extensions` → Developer mode → *Load unpacked* → pick the
+  unzipped `hlhub-chrome` folder.
 - **Firefox**: `about:debugging#/runtime/this-firefox` → *Load Temporary Add-on* →
-  pick `dist-firefox/manifest.json`.
+  pick `manifest.json` inside the unzipped `hlhub-firefox` folder.
+
+Building from a clone works too — `npm install && npm run build`, then load
+`dist/` (Chrome) or `dist-firefox/` (Firefox) the same way.
 
 The build emits one directory per browser: Chrome MV3 hard-errors on
 `background.scripts`, while Firefox has no service-worker background — so
