@@ -112,6 +112,7 @@ entirely).
       the Playwright e2e)
 - [ ] Delete the tsa shim once `hale build --target wasm32` compiles package
       `[ffi]` csrc (then heron's glue.c + real tree-sitter C link in directly)
+      — tracked as [hale-lang/hale#213](https://github.com/hale-lang/hale/issues/213)
 - [ ] Publish to Chrome Web Store / AMO so teammates don't need dev-mode loads
 - [ ] Long-term: once Hale has enough public adoption, upstream to Linguist so
       highlighting works for everyone with no extension

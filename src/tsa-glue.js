@@ -2,10 +2,10 @@
 //
 // Why this exists: `hale build --target wasm32` does not (yet) compile a
 // package's [ffi] csrc (heron's glue.c + parser.c) for wasm — the tsa_*
-// symbols come out of the build as unresolved `env` imports. Until the
-// toolchain closes that gap, we satisfy them here with web-tree-sitter,
-// mirroring glue.c's contracts exactly. All plugin logic stays in Hale;
-// this file is only a parser back-end.
+// symbols come out of the build as unresolved `env` imports
+// (hale-lang/hale#213). Until the toolchain closes that gap, we satisfy
+// them here with web-tree-sitter, mirroring glue.c's contracts exactly.
+// All plugin logic stays in Hale; this file is only a parser back-end.
 //
 // Marshalling notes:
 // - @ffi("c") Int is i64 → handles cross as BigInt.
