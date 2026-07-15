@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { createHaleHighlighter } from '../src/hale-core.js';
 
 const root = new URL('..', import.meta.url).pathname;
-const SAMPLE = process.argv[2] ?? '~/code/hale-lang/pond/heron/examples/parse_demo.hl';
+const SAMPLE = process.argv[2] ?? new URL('./fixtures/parse_demo.hl', import.meta.url).pathname;
 
 const hl = await createHaleHighlighter({
   wasmBytes: readFileSync(`${root}hale/main.wasm`),

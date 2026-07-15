@@ -65,7 +65,7 @@ function scheduleBlob() {
 
 // ---- wiring ----
 
-console.info(`[hlhub] content script active (v${api.runtime.getManifest().version})`);
+console.debug(`[hlhub] content script active (v${api.runtime.getManifest().version})`);
 scanFences(document.body);
 scheduleBlob();
 

@@ -1,19 +1,19 @@
 {
   "name": "hlhub",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Tree-sitter based Hale syntax highlighting for GitHub (browser extension)",
   "main": "index.js",
   "scripts": {
     "test": "node test/smoke.mjs && node test/hale-smoke.mjs",
     "build": "node build.mjs",
     "fixture": "python3 -m http.server 8123",
-    "build:wasm": "tree-sitter build --wasm -o vendor/tree-sitter-hale.wasm ../hale-lang/pond/heron",
-    "build:hale": "cd hale && hale build main.hl --target wasm32",
+    "build:wasm": "tree-sitter build --wasm -o vendor/tree-sitter-hale.wasm hale/vendor/pond/heron",
+    "build:hale": "cd hale && hale build main.hl --target wasm32 && cp vendor/pond/heron/queries/highlights.scm ../vendor/hale-highlights.scm",
     "test:e2e": "node test/e2e-github.mjs"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "type": "module",
   "dependencies": {
     "web-tree-sitter": "^0.26.11"
@@ -21,5 +21,10 @@
   "devDependencies": {
     "esbuild": "^0.28.1",
     "playwright": "^1.61.1"
+  },
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hale-lang/hlhub"
   }
 }

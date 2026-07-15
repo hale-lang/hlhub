@@ -48,8 +48,8 @@ it via `wasm-unsafe-eval`.
 - `src/dom.js` — fence discovery selectors + span application
 - `src/background.js` / `src/content.js` — extension wiring
 - `vendor/` — `tree-sitter-hale.wasm`, `web-tree-sitter.wasm`, `hale-highlights.scm`
-- `hale/vendor/pond` — symlink to `~/code/hale-lang/pond` (the local-symlink dev
-  convention) so `import "vendor/pond/heron"` tracks the working tree
+- `hale/vendor/pond` — symlink to a local pond checkout so
+  `import "vendor/pond/heron"` tracks the working tree
 
 ## Build
 
@@ -61,6 +61,23 @@ npm run build        # bundles to dist/, rebuilds fixture/bundle.js
 
 `hale/main.wasm` is committed (like `vendor/*.wasm`), so `npm run build` works
 without the Hale toolchain; rerun `build:hale` after editing `hale/main.hl`.
+
+### Working on the Hale core or the grammar
+
+`hale/vendor/pond` is a symlink to a local checkout of
+[hale-lang/pond](https://github.com/hale-lang/pond), so the build tracks your
+pond working tree instead of a `hale fetch` snapshot. Fresh clones need it
+pointed somewhere real:
+
+```sh
+git clone https://github.com/hale-lang/pond ~/code/hale-lang/pond  # or wherever
+ln -sfn ~/code/hale-lang/pond hale/vendor/pond
+npm run build:wasm   # grammar → vendor/tree-sitter-hale.wasm (tree-sitter CLI)
+npm run build:hale   # hale/main.hl → hale/main.wasm, syncs highlights.scm (hale CLI)
+```
+
+Neither is needed to hack on the JS glue or to load the extension — the wasm
+artifacts are committed.
 
 To refresh the grammar after editing `~/code/hale-lang/pond/heron`:
 
@@ -98,6 +115,19 @@ runs the identical core + DOM pipeline in-page. The e2e needs
 `npx playwright install chromium --no-shell` once (the default headless shell
 can't load extensions; branded Google Chrome ignores `--load-extension`
 entirely).
+
+## Troubleshooting
+
+The extension logs everything as `console.debug` under a `[hlhub]` prefix —
+open DevTools on a GitHub page, enable **Verbose** in the console levels, and
+filter for `hlhub`. You should see `content script active`, then per-file
+lines like `got 319 spans → 150 styled lines` and patch stats. A `patch:`
+line with `"total":0` means GitHub shipped a code-view markup variant we
+don't select yet (there are already two: the anonymous virtualized view keys
+lines by `data-line-number`, the logged-in no-virtualization view only by
+`id="LC<n>"`) — the log dumps the nearest candidate markup; please file it.
+Background-worker errors surface in the service-worker console
+(`chrome://extensions` → hlhub → *service worker*).
 
 ## Known limits
 

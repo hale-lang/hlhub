@@ -3,7 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { Parser, Language, Query } from 'web-tree-sitter';
 
-const SAMPLE = process.argv[2] ?? '~/code/hale-lang/pond/heron/examples/parse_demo.hl';
+const SAMPLE = process.argv[2] ?? new URL('./fixtures/parse_demo.hl', import.meta.url).pathname;
 
 await Parser.init();
 const lang = await Language.load(new URL('../vendor/tree-sitter-hale.wasm', import.meta.url).pathname);
