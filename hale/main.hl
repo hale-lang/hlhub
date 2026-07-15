@@ -1,0 +1,106 @@
+// hlhub highlighter — the extension's core, in Hale.
+//
+// The page (extension background worker) writes text into the wasm
+// inbox and calls an export; spans come back through hlhub_emit as
+// "start_byte:end_byte:pl-class" rows, one per styled capture.
+//
+// Protocol:
+//   1. inbox <- highlights.scm text;  call set_query()
+//   2. inbox <- source text;          call highlight()
+//      -> hlhub_emit("12:19:pl-k\n20:35:pl-s\n...")
+
+import "vendor/pond/heron" as heron;
+
+target wasm { }
+
+@ffi("js") fn hlhub_emit(rows: String);
+@ffi("c") fn lotus_wasm_inbox() -> Bytes;
+
+// ---- capture name -> GitHub Primer token class ----
+//
+// Same table as the JS milestone-1 mapping: GitHub's own pl-* classes
+// so colors follow the viewer's GitHub theme. Empty string = leave
+// unstyled (punctuation, plain variables, most operators).
+
+fn has_prefix(s: String, p: String) -> Bool {
+    if len(s) < len(p) { return false; }
+    return std::str::substring(s, 0, len(p)) == p;
+}
+
+fn class_for(name: String) -> String {
+    // Most-specific rules first; prefix rules after exact ones.
+    if name == "operator.special"      { return "pl-k"; }   // `<-` bus send
+    if name == "string.special.symbol" { return "pl-ent"; } // bus subjects
+    if name == "variable.builtin"      { return "pl-smi"; } // `self`
+    if has_prefix(name, "comment")     { return "pl-c"; }
+    if has_prefix(name, "keyword")     { return "pl-k"; }
+    if has_prefix(name, "string")      { return "pl-s"; }
+    if has_prefix(name, "number")      { return "pl-c1"; }
+    if has_prefix(name, "constant")    { return "pl-c1"; }
+    if has_prefix(name, "boolean")     { return "pl-c1"; }
+    if has_prefix(name, "function")    { return "pl-en"; }
+    if has_prefix(name, "attribute")   { return "pl-en"; }
+    if has_prefix(name, "type")        { return "pl-smi"; }
+    return "";
+}
+
+// Rewrite one "start:end:capture_name" row as "start:end:pl-class",
+// appending to the builder. Rows whose capture maps to unstyled are
+// dropped.
+fn map_row(out: Bytes, row: String) {
+    let rb = std::bytes::from_string(row);
+    let c1 = std::bytes::find_byte(rb, 0, 58);          // first ':'
+    if c1 < 0 { return; }
+    let c2 = std::bytes::find_byte(rb, c1 + 1, 58);     // second ':'
+    if c2 < 0 { return; }
+    let cls = class_for(std::str::substring(row, c2 + 1, len(row)));
+    if cls == "" { return; }
+    std::str::builder_append(out, std::str::substring(row, 0, c2 + 1));
+    std::str::builder_append(out, cls);
+    std::str::builder_append(out, "\n");
+}
+
+@export locus Highlighter {
+    params {
+        query_src: String = "";
+    }
+
+    birth() { }
+
+    // inbox: the highlights.scm document. Called once at startup.
+    fn set_query() {
+        self.query_src = std::str::from_bytes(lotus_wasm_inbox());
+    }
+
+    // inbox: source text to highlight. Emits mapped rows (or "" on
+    // any failure — the page then leaves the block unhighlighted).
+    fn highlight() {
+        let src = std::str::from_bytes(lotus_wasm_inbox());
+
+        let parser = heron::Parser { };
+        if !parser.is_ready() { hlhub_emit(""); return; }
+
+        let tree = heron::parse(parser, src);
+        if !tree.is_valid() { hlhub_emit(""); return; }
+
+        let q = heron::Query { source: self.query_src };
+        if !q.is_valid() { hlhub_emit(""); return; }
+
+        let root = tree.root();
+        let rows = q.apply(root);
+        heron::node_delete(root);
+
+        let out = std::str::builder_new();
+        let mut lo = 0;
+        let rb = std::bytes::from_string(rows);
+        while lo < len(rows) {
+            let mut hi = std::bytes::find_byte(rb, lo, 10);  // '\n'
+            if hi < 0 { hi = len(rows); }
+            if hi > lo {
+                map_row(out, std::str::substring(rows, lo, hi));
+            }
+            lo = hi + 1;
+        }
+        hlhub_emit(std::str::builder_finish(out));
+    }
+}

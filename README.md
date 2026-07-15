@@ -14,31 +14,53 @@ colorblind variants — with no CSS of our own.
 
 ## Architecture
 
+The plugin's brain is written **in Hale**, compiled to wasm with
+`hale build --target wasm32`. JS is reduced to what a browser demands: DOM
+glue, extension messaging, and a parser shim.
+
 ```
-content script (github.com)          background worker
-┌────────────────────────────┐      ┌──────────────────────────────┐
-│ find hale/ap/lotus fences  │ text │ web-tree-sitter + wasm       │
-│ MutationObserver for SPA   │─────▶│ grammar + highlights.scm     │
-│ apply spans as pl-* <span>s│◀─────│ captures → flat class spans  │
-└────────────────────────────┘ spans└──────────────────────────────┘
+content script (github.com)     background worker
+┌──────────────────────────┐    ┌───────────────────────────────────────┐
+│ find hale/ap/lotus       │text│ hale/main.wasm  (written in Hale)     │
+│ fences; MutationObserver │───▶│  Highlighter locus: parse protocol,   │
+│ apply spans as pl-*      │◀───│  capture→pl-* mapping, row rewriting  │
+│ <span>s                  │spans│      ▲ tsa_* imports                 │
+└──────────────────────────┘    │      ▼                                │
+                                │ tsa shim (JS): web-tree-sitter        │
+                                │ grammar wasm + highlights.scm         │
+                                └───────────────────────────────────────┘
 ```
+
+Why the shim: `hale build --target wasm32` doesn't yet compile a package's
+`[ffi]` csrc (heron's glue.c + tree-sitter), so those symbols surface as wasm
+`env` imports — which we satisfy from JS with web-tree-sitter, mirroring
+glue.c's contracts. When the toolchain closes that gap, the shim deletes and
+the same `main.hl` links the real C parser directly.
 
 Parsing lives in the background worker because github.com's page CSP blocks
 WebAssembly compilation in content scripts; the extension's own context allows
 it via `wasm-unsafe-eval`.
 
-- `src/core.js` — wasm parser + query → non-overlapping `{start, end, cls}` spans
-- `src/mapping.js` — tree-sitter capture names → Primer classes (the tuning knob)
+- `hale/main.hl` — the highlighter, in Hale: `@export locus Highlighter`,
+  capture→Primer-class mapping (the tuning knob), row rewriting
+- `src/hale-core.js` — loads hale/main.wasm, inbox/emit protocol, span flattening
+- `src/tsa-glue.js` — web-tree-sitter shim behind the module's `tsa_*` imports
 - `src/dom.js` — fence discovery selectors + span application
 - `src/background.js` / `src/content.js` — extension wiring
 - `vendor/` — `tree-sitter-hale.wasm`, `web-tree-sitter.wasm`, `hale-highlights.scm`
+- `hale/vendor/pond` — symlink to `~/code/hale-lang/pond` (the local-symlink dev
+  convention) so `import "vendor/pond/heron"` tracks the working tree
 
 ## Build
 
 ```sh
 npm install
+npm run build:hale   # hale build hale/main.hl --target wasm32 (needs hale CLI)
 npm run build        # bundles to dist/, rebuilds fixture/bundle.js
 ```
+
+`hale/main.wasm` is committed (like `vendor/*.wasm`), so `npm run build` works
+without the Hale toolchain; rerun `build:hale` after editing `hale/main.hl`.
 
 To refresh the grammar after editing `~/code/hale-lang/pond/heron`:
 

@@ -22,5 +22,7 @@ await build({ ...common, format: 'esm', entryPoints: ['fixture/main.js'], outfil
 
 cpSync('manifest.json', 'dist/manifest.json');
 cpSync('vendor', 'dist/vendor', { recursive: true });
+mkdirSync('dist/hale', { recursive: true });
+cpSync('hale/main.wasm', 'dist/hale/main.wasm');
 
 console.log('dist/ ready — load it as an unpacked extension.');

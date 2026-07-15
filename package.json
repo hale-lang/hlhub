@@ -4,10 +4,11 @@
   "description": "Tree-sitter based Hale syntax highlighting for GitHub (browser extension)",
   "main": "index.js",
   "scripts": {
-    "test": "node test/smoke.mjs",
+    "test": "node test/smoke.mjs && node test/hale-smoke.mjs",
     "build": "node build.mjs",
     "fixture": "python3 -m http.server 8123",
-    "build:wasm": "tree-sitter build --wasm -o vendor/tree-sitter-hale.wasm ../hale-lang/pond/heron"
+    "build:wasm": "tree-sitter build --wasm -o vendor/tree-sitter-hale.wasm ../hale-lang/pond/heron",
+    "build:hale": "cd hale && hale build main.hl --target wasm32"
   },
   "keywords": [],
   "author": "",
