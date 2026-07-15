@@ -8,8 +8,19 @@ import { createBlobHighlighter } from './blob.js';
 const api = globalThis.browser ?? globalThis.chrome;
 
 async function requestSpans(text) {
-  const res = await api.runtime.sendMessage({ type: 'hlhub:highlight', text });
-  if (!res?.ok) throw new Error(res?.error ?? 'highlight failed');
+  let res;
+  try {
+    res = await api.runtime.sendMessage({ type: 'hlhub:highlight', text });
+  } catch (err) {
+    // Typically "Receiving end does not exist" — the background worker
+    // failed to start; its own console has the root cause.
+    console.warn('[hlhub] background unreachable:', err.message);
+    throw err;
+  }
+  if (!res?.ok) {
+    console.warn('[hlhub] highlight failed in background:', res?.error);
+    throw new Error(res?.error ?? 'highlight failed');
+  }
   return res.spans;
 }
 
@@ -54,6 +65,7 @@ function scheduleBlob() {
 
 // ---- wiring ----
 
+console.info(`[hlhub] content script active (v${api.runtime.getManifest().version})`);
 scanFences(document.body);
 scheduleBlob();
 

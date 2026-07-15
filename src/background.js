@@ -28,6 +28,7 @@ api.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     .then((hl) => sendResponse({ ok: true, spans: hl.highlight(msg.text) }))
     .catch((err) => {
       ready = null; // allow retry after a failed init
+      console.error('[hlhub] highlighter init/run failed:', err);
       sendResponse({ ok: false, error: String(err) });
     });
   return true; // keep the channel open for the async response
