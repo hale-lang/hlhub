@@ -1,6 +1,6 @@
 {
   "name": "hlhub",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Tree-sitter based Hale syntax highlighting for GitHub (browser extension)",
   "main": "index.js",
   "scripts": {
