@@ -64,8 +64,21 @@ export function createBlobHighlighter(requestSpans, opts = {}) {
       el.dataset.hlhub = String(n);
       stats.patched++;
     }
-    if (stats.patched || stats.textMismatch) {
+    if (stats.patched || stats.textMismatch || !patch.logged) {
+      patch.logged = true;
       console.debug('[hlhub:blob] patch:', JSON.stringify(stats));
+      if (stats.total === 0) {
+        // Selector matched nothing — dump what the code area actually
+        // looks like so the variant is identifiable from a bug report.
+        const probe =
+          root.querySelector('[data-testid="code-cell"]') ??
+          root.querySelector('.react-code-line-contents') ??
+          root.querySelector('#read-only-cursor-text-area')?.parentElement?.parentElement;
+        console.debug(
+          '[hlhub:blob] no line divs; nearest candidate:',
+          probe ? probe.outerHTML.slice(0, 300) : '(no code-cell/react-code markers at all)'
+        );
+      }
     }
   }
 
