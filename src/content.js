@@ -1,20 +1,27 @@
-// Content script: find Hale code fences on github.com, ship their text to
-// the background parser, apply the returned spans using GitHub's own pl-*
+// Content script: find Hale code on github.com — fenced blocks in
+// rendered markdown plus the .hl file (blob) view — ship text to the
+// background parser, apply the returned spans using GitHub's own pl-*
 // token classes (so colors follow the viewer's GitHub theme).
 import { applySpans, findFenceTargets } from './dom.js';
+import { createBlobHighlighter } from './blob.js';
 
 const api = globalThis.browser ?? globalThis.chrome;
 
-async function highlightEl(el) {
+async function requestSpans(text) {
+  const res = await api.runtime.sendMessage({ type: 'hlhub:highlight', text });
+  if (!res?.ok) throw new Error(res?.error ?? 'highlight failed');
+  return res.spans;
+}
+
+// ---- fenced code blocks ----
+
+async function highlightFence(el) {
   el.dataset.hlhub = 'pending';
   const text = el.textContent;
-  let res;
+  let spans;
   try {
-    res = await api.runtime.sendMessage({ type: 'hlhub:highlight', text });
+    spans = await requestSpans(text);
   } catch {
-    res = null;
-  }
-  if (!res?.ok) {
     el.dataset.hlhub = 'error';
     return;
   }
@@ -23,21 +30,40 @@ async function highlightEl(el) {
     delete el.dataset.hlhub;
     return;
   }
-  applySpans(el, text, res.spans);
+  applySpans(el, text, spans);
   el.dataset.hlhub = 'done';
 }
 
-function scan(root) {
-  for (const el of findFenceTargets(root)) highlightEl(el);
+function scanFences(rootEl) {
+  for (const el of findFenceTargets(rootEl)) highlightFence(el);
 }
 
-scan(document.body);
+// ---- blob view ----
 
-// GitHub is a SPA (Turbo + React): new content arrives without page loads.
+const blob = createBlobHighlighter(requestSpans);
+
+let blobScheduled = false;
+function scheduleBlob() {
+  if (blobScheduled) return;
+  blobScheduled = true;
+  requestAnimationFrame(() => {
+    blobScheduled = false;
+    blob.refresh();
+  });
+}
+
+// ---- wiring ----
+
+scanFences(document.body);
+scheduleBlob();
+
+// GitHub is a SPA (Turbo + React): new content arrives without page
+// loads, and the code view mounts/recycles line divs while scrolling.
 new MutationObserver((mutations) => {
   for (const m of mutations) {
     for (const node of m.addedNodes) {
-      if (node.nodeType === Node.ELEMENT_NODE) scan(node);
+      if (node.nodeType === Node.ELEMENT_NODE) scanFences(node);
     }
   }
+  scheduleBlob();
 }).observe(document.documentElement, { childList: true, subtree: true });

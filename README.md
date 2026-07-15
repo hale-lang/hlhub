@@ -83,19 +83,35 @@ tagged `hale`, `ap`, or `lotus`.
 ## Test
 
 ```sh
-npm test             # node smoke test: parse the grammar's example, count captures
+npm test             # node smoke tests: grammar wasm + the full Hale pipeline
+npm run test:e2e     # Playwright: loads dist/ into Chromium against real
+                     # github.com pages (fence + virtualized blob view)
 npm run fixture      # serve the repo; open http://localhost:8123/fixture/
 ```
 
 `fixture/index.html` reproduces GitHub's markup for unknown-language fences and
-runs the identical core + DOM pipeline in-page.
+runs the identical core + DOM pipeline in-page. The e2e needs
+`npx playwright install chromium --no-shell` once (the default headless shell
+can't load extensions; branded Google Chrome ignores `--load-extension`
+entirely).
+
+## Known limits
+
+- Files/fences over 64 KB are left unstyled (the Hale wasm runtime's inbox is
+  a fixed 64 KB slot); same for query results past 64 KB, which truncate at a
+  row boundary.
+- Fence snippets that aren't valid top-level Hale get partial highlighting —
+  tree-sitter's error recovery only captures what still parses.
 
 ## Roadmap
 
 - [x] Milestone 1 — fenced code blocks in READMEs, issues, PRs
-- [ ] Milestone 2 — the file (blob) view for `.hl` files. Harder: GitHub's code
-      view virtualizes line rendering, so this needs per-line patching as lines
-      mount, not one-shot rendering.
+- [x] Milestone 2 — the `.hl` file (blob) view: full text from the cursor
+      textarea, one parse, per-line span patching as GitHub's virtualized
+      React view mounts/recycles line divs (verified on real github.com via
+      the Playwright e2e)
+- [ ] Delete the tsa shim once `hale build --target wasm32` compiles package
+      `[ffi]` csrc (then heron's glue.c + real tree-sitter C link in directly)
 - [ ] Publish to Chrome Web Store / AMO so teammates don't need dev-mode loads
 - [ ] Long-term: once Hale has enough public adoption, upstream to Linguist so
       highlighting works for everyone with no extension

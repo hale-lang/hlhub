@@ -8,7 +8,8 @@
     "build": "node build.mjs",
     "fixture": "python3 -m http.server 8123",
     "build:wasm": "tree-sitter build --wasm -o vendor/tree-sitter-hale.wasm ../hale-lang/pond/heron",
-    "build:hale": "cd hale && hale build main.hl --target wasm32"
+    "build:hale": "cd hale && hale build main.hl --target wasm32",
+    "test:e2e": "node test/e2e-github.mjs"
   },
   "keywords": [],
   "author": "",
@@ -18,6 +19,7 @@
     "web-tree-sitter": "^0.26.11"
   },
   "devDependencies": {
-    "esbuild": "^0.28.1"
+    "esbuild": "^0.28.1",
+    "playwright": "^1.61.1"
   }
 }
