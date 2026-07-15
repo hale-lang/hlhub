@@ -4,8 +4,7 @@
   "version": "0.1.0",
   "description": "Tree-sitter based syntax highlighting for the Hale language (.hl) on github.com",
   "background": {
-    "service_worker": "background.js",
-    "scripts": ["background.js"]
+    "service_worker": "background.js"
   },
   "content_scripts": [
     {

@@ -74,8 +74,12 @@ npm run build
 
 - **Chrome**: `chrome://extensions` → Developer mode → *Load unpacked* → pick `dist/`.
 - **Firefox**: `about:debugging#/runtime/this-firefox` → *Load Temporary Add-on* →
-  pick `dist/manifest.json`. (Chrome ignores the Firefox-only manifest keys and
-  vice versa; one `dist/` serves both.)
+  pick `dist-firefox/manifest.json`.
+
+The build emits one directory per browser: Chrome MV3 hard-errors on
+`background.scripts`, while Firefox has no service-worker background — so
+`dist/` uses `service_worker` and `dist-firefox/` uses `scripts`, from the
+same bundles.
 
 Then open any GitHub README / issue / PR comment containing a fenced block
 tagged `hale`, `ap`, or `lotus`.
