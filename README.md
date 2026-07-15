@@ -1,8 +1,9 @@
-# hlhub
+# highlight-hub
 
-Browser extension (Chrome + Firefox, Manifest V3) that adds syntax highlighting
-for the [Hale](https://github.com/hale-lang) language on github.com, powered by
-the real tree-sitter grammar compiled to WebAssembly.
+**highlight-hub** (`hlhub`) is a browser extension (Chrome + Firefox, Manifest
+V3) that adds syntax highlighting for the
+[Hale](https://github.com/hale-lang) language on github.com, powered by the
+real tree-sitter grammar compiled to WebAssembly.
 
 GitHub only highlights languages known to [Linguist](https://github.com/github-linguist/linguist),
 and Linguist's contribution bar (hundreds of public repos using the language)

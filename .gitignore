@@ -2,3 +2,4 @@ node_modules/
 dist/
 dist-firefox/
 fixture/bundle.js
+hale/vendor/
