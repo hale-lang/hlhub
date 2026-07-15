@@ -50,45 +50,58 @@ export function createBlobHighlighter(requestSpans, opts = {}) {
 
   function patch() {
     if (!lineSpans) return;
+    const stats = { total: 0, patched: 0, alreadyDone: 0, noSpans: 0, textMismatch: 0 };
     for (const el of root.querySelectorAll('div.react-file-line[data-line-number]')) {
+      stats.total++;
       const n = Number(el.getAttribute('data-line-number'));
       const spans = lineSpans.get(n);
-      if (!spans) continue;
+      if (!spans) { stats.noSpans++; continue; }
       // Recycled/re-rendered divs: our mark survives but content moved on.
-      if (el.dataset.hlhub === String(n) && el.childElementCount > 0) continue;
+      if (el.dataset.hlhub === String(n) && el.childElementCount > 0) { stats.alreadyDone++; continue; }
       const expected = lineText[n - 1];
-      if (el.textContent !== expected) continue; // not the raw line — skip
+      if (el.textContent !== expected) { stats.textMismatch++; continue; } // not the raw line
       applySpans(el, expected, spans);
       el.dataset.hlhub = String(n);
+      stats.patched++;
+    }
+    if (stats.patched || stats.textMismatch) {
+      console.debug('[hlhub:blob] patch:', JSON.stringify(stats));
     }
   }
 
   async function refresh() {
+    const dbg = (...a) => console.debug('[hlhub:blob]', ...a);
     if (!isBlobPage()) {
+      if (fileText !== null) dbg('left blob page, state cleared');
       requested = fileText = lineText = lineSpans = null;
       return;
     }
     const ta = root.getElementById
       ? root.getElementById('read-only-cursor-text-area')
       : root.querySelector('#read-only-cursor-text-area');
-    if (!ta) return; // React app not mounted yet; a later mutation retries
+    if (!ta) {
+      dbg('blob page but no cursor textarea yet', location.pathname);
+      return; // React app not mounted yet; a later mutation retries
+    }
     const text = ta.value;
     if (text === requested) {
       if (text === fileText) patch();
       return; // request in flight; patch happens when it lands
     }
+    dbg(`requesting spans for ${text.length} chars`, location.pathname);
     requested = text;
     let spans;
     try {
       spans = await requestSpans(text);
     } catch {
-      requested = null; // allow retry on the next mutation
+      requested = null; // allow retry on the next mutation (already warned)
       return;
     }
-    if (requested !== text) return; // navigated to another file meanwhile
+    if (requested !== text) { dbg('stale response dropped'); return; }
     fileText = text;
     lineText = text.split('\n');
     lineSpans = splitToLines(text, spans);
+    dbg(`got ${spans.length} spans → ${lineSpans.size} styled lines`);
     patch();
   }
 
