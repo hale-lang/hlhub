@@ -1,0 +1,22 @@
+{
+  "name": "hlhub",
+  "version": "0.1.0",
+  "description": "Tree-sitter based Hale syntax highlighting for GitHub (browser extension)",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test/smoke.mjs",
+    "build": "node build.mjs",
+    "fixture": "python3 -m http.server 8123",
+    "build:wasm": "tree-sitter build --wasm -o vendor/tree-sitter-hale.wasm ../hale-lang/pond/heron"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "web-tree-sitter": "^0.26.11"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.1"
+  }
+}

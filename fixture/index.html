@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>hlhub fixture — GitHub-shaped Hale fence</title>
+<style>
+  /* Primer-ish token colors so the pl-* classes are visible outside GitHub.
+     On github.com these classes are styled by GitHub's own CSS. */
+  :root {
+    --bg: #ffffff; --fg: #1f2328; --border: #d1d9e0; --codebg: #f6f8fa;
+    --c: #59636e; --k: #cf222e; --s: #0a3069; --c1: #0550ae;
+    --en: #6639ba; --smi: #953800; --ent: #116329;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1117; --fg: #f0f6fc; --border: #3d444d; --codebg: #151b23;
+      --c: #9198a1; --k: #ff7b72; --s: #a5d6ff; --c1: #79c0ff;
+      --en: #d2a8ff; --smi: #ffa657; --ent: #7ee787;
+    }
+  }
+  body { background: var(--bg); color: var(--fg); font-family: system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+  pre { background: var(--codebg); border: 1px solid var(--border); border-radius: 6px; padding: 16px; overflow-x: auto; font-size: 85%; line-height: 1.45; }
+  code { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; }
+  .pl-c { color: var(--c); } .pl-k { color: var(--k); } .pl-s { color: var(--s); }
+  .pl-c1 { color: var(--c1); } .pl-en { color: var(--en); } .pl-smi { color: var(--smi); }
+  .pl-ent { color: var(--ent); }
+  #status { font-size: 0.85rem; color: var(--c); }
+</style>
+</head>
+<body>
+<h1>hlhub fixture</h1>
+<p>A <code>```hale</code> fence in the shape GitHub emits for languages Linguist doesn't know.</p>
+<p id="status">loading…</p>
+
+<div class="snippet-clipboard-content">
+<pre lang="hale"><code>// parse_demo.hl — parse an .hl file and walk the locus tower.
+
+import "vendor/pond/heron" as heron;
+
+fn main() {
+    if std::env::args_count() &lt; 2 {
+        println("usage: parse_demo &lt;source.hl&gt;");
+        return;
+    }
+
+    let path = std::env::arg(1);
+    let content = std::io::fs::read_file(path) or raise;
+
+    let parser = heron::Parser { };
+    if !parser.is_ready() {
+        println("parser allocation failed");
+        return;
+    }
+
+    let tree = heron::parse(parser, content);
+    println("root kind: ", heron::node_kind(tree.root()));
+}</code></pre>
+</div>
+
+<script type="module" src="bundle.js"></script>
+</body>
+</html>
