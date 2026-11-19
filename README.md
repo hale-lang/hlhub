@@ -63,30 +63,39 @@ npm run build        # bundles to dist/, rebuilds fixture/bundle.js
 `hale/main.wasm` is committed (like `vendor/*.wasm`), so `npm run build` works
 without the Hale toolchain; rerun `build:hale` after editing `hale/main.hl`.
 
-### Working on the Hale core or the grammar
+### Working on the grammar
+
+The grammar and its `highlights.scm` live in
+[hale-lang/tree-sitter-hale](https://github.com/hale-lang/tree-sitter-hale).
+`vendor/tree-sitter-hale.wasm` and `vendor/hale-highlights.scm` are built and
+copied from a checkout of it, beside this one by default (`TREE_SITTER_HALE`
+points elsewhere):
+
+```sh
+git clone https://github.com/hale-lang/tree-sitter-hale ../tree-sitter-hale
+npm run build:wasm   # grammar → vendor/tree-sitter-hale.wasm, and copies highlights.scm (tree-sitter CLI)
+npm run build
+npm test             # fails if the grammar leaves an ERROR node in a fixture
+```
+
+The vendored grammar is tree-sitter-hale v0.1.0: Hale's surface as v0.36.0
+ships it.
+
+### Working on the Hale core
 
 `hale/vendor/pond` is a symlink to a local checkout of
-[hale-lang/pond](https://github.com/hale-lang/pond), so the build tracks your
-pond working tree instead of a `hale fetch` snapshot. Fresh clones need it
-pointed somewhere real:
+[hale-lang/pond](https://github.com/hale-lang/pond), whose `heron` wrapper
+`hale/main.hl` imports, so the build tracks your pond working tree instead of
+a `hale fetch` snapshot. Fresh clones need it pointed somewhere real:
 
 ```sh
 git clone https://github.com/hale-lang/pond ~/code/hale-lang/pond  # or wherever
 ln -sfn ~/code/hale-lang/pond hale/vendor/pond
-npm run build:wasm   # grammar → vendor/tree-sitter-hale.wasm (tree-sitter CLI)
-npm run build:hale   # hale/main.hl → hale/main.wasm, syncs highlights.scm (hale CLI)
+npm run build:hale   # hale/main.hl → hale/main.wasm (hale CLI)
 ```
 
 Neither is needed to hack on the JS glue or to load the extension — the wasm
 artifacts are committed.
-
-To refresh the grammar after editing `~/code/hale-lang/pond/heron`:
-
-```sh
-npm run build:wasm   # recompiles vendor/tree-sitter-hale.wasm (tree-sitter CLI)
-cp ~/code/hale-lang/pond/heron/queries/highlights.scm vendor/hale-highlights.scm
-npm run build
-```
 
 ## Install
 

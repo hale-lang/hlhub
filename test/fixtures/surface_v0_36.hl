@@ -1,0 +1,41 @@
+// Hale's surface as v0.36.0 ships it: forms the grammar must parse
+// without an ERROR node and the highlighter must colour.
+import "./store" as st { Row, describe as show };
+
+/// A side of the book, with its wire names.
+@wire_case(snake)
+type Side = enum { Buy `json:"buy"`, Sell `json:"sell"`, Other(String) `json:",other"` };
+
+@display("{sym} at {px:?}")
+type Quote { sym: String; px: Decimal<2>; last?: Decimal<8>; note?: String clearable; }
+
+type Item = Book | Film;
+
+const SLASH = b'/';
+const RAW: String = r#"say "hi""#;
+
+fn kind(word: String, side: Side) -> String {
+    if let Side::Other(raw) = side { return raw; }
+    let Side::Buy = side else { return "not a buy"; };
+    let head = word[..3];
+    let tail = word[3..];
+    let module = Side::name(side);
+    match word {
+        "buy" | "bid" -> "long",
+        _ -> head + tail + module,
+    }
+}
+
+api Shop requires: [clerk] {
+    rpc Desk::place;
+    rpc Desk::stock at "GET /stock" status: 200;
+}
+
+locus Desk {
+    @rpc fn place(o: Quote) -> Quote { o }
+    @rpc(requires: [manager]) fn stock() -> Int { 0 }
+    on_failure(c: Child) {
+        let restart = true;
+        restart(c) for 3;
+    }
+}
