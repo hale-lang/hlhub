@@ -19,6 +19,9 @@ const captures = query.captures(tree.rootNode);
 
 console.log(`source: ${source.length} chars, ${source.split('\n').length} lines`);
 console.log(`root node: ${tree.rootNode.type}, hasError: ${tree.rootNode.hasError}`);
+// The grammar must take the whole file: an ERROR node is a surface the
+// vendored grammar has fallen behind on.
+if (tree.rootNode.hasError) throw new Error(`${SAMPLE}: the grammar left an ERROR or MISSING node`);
 console.log(`captures: ${captures.length}`);
 
 const byName = {};
