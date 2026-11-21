@@ -1,0 +1,30 @@
+// Hale's surface as v0.37.0 ships it: forms the grammar must parse
+// without an ERROR node and the highlighter must colour.
+type Outcome = enum { Result(Int), Refused(String), Pending };
+type Meters = enum { M(Int) };
+
+// `.Variant` names a variant of the matched value's enum (F.58).
+fn score(o: Outcome) -> Int {
+    return match o {
+        .Result(0) -> -100,
+        .Result(n) if n > 10 -> 10,
+        .Result(n) -> n,
+        .Refused(_) | Outcome::Pending -> 0,
+    };
+}
+
+fn refusal(o: Outcome) -> String {
+    if let .Refused(why) = o { why } else { "" }
+}
+
+fn head(o: Outcome, m: Meters) -> Int {
+    let .Result(index) = o else { return -1; };
+    let .M(n) = m;
+    return index + n;
+}
+
+// A std::str fn called on the text it takes first (F.59).
+fn norm(raw: String) -> String {
+    let port = " 8080 ".trim().parse_int() or 0;
+    return raw.trim().lower() + to_string(port);
+}
