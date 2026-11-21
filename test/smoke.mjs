@@ -24,7 +24,7 @@ console.log(`root node: ${tree.rootNode.type}, hasError: ${tree.rootNode.hasErro
 if (tree.rootNode.hasError) throw new Error(`${SAMPLE}: the grammar left an ERROR or MISSING node`);
 console.log(`captures: ${captures.length}`);
 
-const byName = {};
+const byName = Object.create(null); // a capture may be named `constructor`
 for (const c of captures) byName[c.name] = (byName[c.name] ?? 0) + 1;
 console.log(Object.entries(byName).sort((a, b) => b[1] - a[1]).map(([k, v]) => `  ${k}: ${v}`).join('\n'));
 

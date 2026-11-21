@@ -78,7 +78,7 @@ npm run build
 npm test             # fails if the grammar leaves an ERROR node in a fixture
 ```
 
-The vendored grammar is tree-sitter-hale v0.1.0: Hale's surface as v0.36.0
+The vendored grammar is tree-sitter-hale v0.2.0: Hale's surface as v0.37.0
 ships it.
 
 ### Working on the Hale core
