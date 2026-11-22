@@ -1,0 +1,45 @@
+// Hale's surface as v0.38.0 ships it: forms the grammar must parse
+// without an ERROR node and the highlighter must colour.
+
+// `U64` and the fixed-width integers are builtin types (F.60, F.64).
+type Header { version: U8; flags: U16; length: U32; offset: I32; hash: U64; }
+
+fn widened(x: U8) -> U32 {
+    return x;
+}
+
+fn top(n: Int) -> U64 {
+    let m: U64 = 18446744073709551615;
+    let b: U8 = U8(n) or clamp;
+    let w: U64 = b;
+    return m - U64::from_int(n) - w;
+}
+
+// Units over any integer base (F.62).
+unit wei;
+type Wei = quantity U64 in wei;
+type Level = U8 { range: 0..100; }
+type Port = distinct U16;
+
+// Every innermost loop of the fn must vectorize (F.63).
+@vectorize
+fn total(xs: bounded[Int; 1024]) -> Int {
+    let mut s = 0;
+    for x in xs {
+        s = s + x;
+    }
+    return s;
+}
+
+@vectorize(min_width: 4)
+fn scaled(xs: bounded[U32; 1024]) -> U32 {
+    return xs.map(U32::wrapping_mul(it, 3)).sum(U32(0));
+}
+
+// Locus modes were removed (F.61): `mode`, `bulk`, `harmonic` and
+// `resolution` are ordinary names.
+locus Sensor {
+    params { mode: String = "idle"; samples: Int = 4; }
+    fn bulk() -> Int { return self.samples * 10; }
+    fn resolution() -> Int { return self.bulk() + 1; }
+}
